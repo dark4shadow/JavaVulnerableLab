@@ -35,6 +35,18 @@ public class XPathQuery extends HttpServlet {
             String user=request.getParameter("username");
             String pass=request.getParameter("password");
             
+            // Validate and sanitize inputs to prevent injection
+            if (user == null || pass == null || user.isEmpty() || pass.isEmpty()) {
+                response.sendRedirect(response.encodeURL("ForwardMe?location=/vulnerability/Injection/xpath_login.jsp?err=Invalid Credentials"));
+                return;
+            }
+            
+            // Strict validation: only allow alphanumeric characters and basic punctuation
+            if (!user.matches("[a-zA-Z0-9@._-]+") || !pass.matches("[a-zA-Z0-9@._!#$%^&*()-]+")) {
+                response.sendRedirect(response.encodeURL("ForwardMe?location=/vulnerability/Injection/xpath_login.jsp?err=Invalid Credentials"));
+                return;
+            }
+            
             //XML Source:
             String XML_SOURCE=getServletContext().getRealPath("/WEB-INF/users.xml");
             
@@ -50,12 +62,20 @@ public class XPathQuery extends HttpServlet {
             
             XPath xPath=XPathFactory.newInstance().newXPath();
             
-            //XPath Query:
-            String xPression="/users/user[username='"+user+"' and password='"+pass+"']/name";
+            // Properly escape XPath injection by escaping all special characters
+            // Best practice: use prepared statements or a safe XPath library
+            String escapedUser = escapeXPath(user);
+            String escapedPass = escapeXPath(pass);
+            
+            //XPath Query with escaped parameters:
+            String xPression="/users/user[username='"+escapedUser+"' and password='"+escapedPass+"']/name";
             
             //running Xpath query:
             String name=xPath.compile(xPression).evaluate(xDoc);
-            out.println(name);
+            
+            // Sanitize output to prevent XSS by HTML-encoding special characters
+            String safeName = escapeHtml(name);
+            out.println(safeName);
             if(name.isEmpty())
             {
                 response.sendRedirect(response.encodeURL("ForwardMe?location=/vulnerability/Injection/xpath_login.jsp?err=Invalid Credentials"));
@@ -64,7 +84,7 @@ public class XPathQuery extends HttpServlet {
             {
                  HttpSession session=request.getSession();
                  session.setAttribute("isLoggedIn", "1");
-                  session.setAttribute("user", name);
+                  session.setAttribute("user", safeName);
                  response.sendRedirect(response.encodeURL("ForwardMe?location=/index.jsp"));                                  
             }
         } 
@@ -75,6 +95,50 @@ public class XPathQuery extends HttpServlet {
         finally {
             out.close();
         }
+    }
+    
+    /**
+     * Escapes special characters in XPath expressions to prevent XPath injection
+     * @param input the string to escape
+     * @return the escaped string
+     */
+    private String escapeXPath(String input) {
+        if (input == null) {
+            return "";
+        }
+        // XPath 1.0 doesn't have escape sequences, so we need to handle quotes carefully
+        // The safest approach is to use concat() for strings containing quotes
+        if (input.contains("'")) {
+            // Split by single quotes and concatenate with double quotes
+            String[] parts = input.split("'", -1);
+            StringBuilder sb = new StringBuilder("concat(");
+            for (int i = 0; i < parts.length; i++) {
+                if (i > 0) {
+                    sb.append(",\"'\",");
+                }
+                sb.append("'").append(parts[i]).append("'");
+            }
+            sb.append(")");
+            return sb.toString();
+        }
+        return input;
+    }
+    
+    /**
+     * Escapes HTML special characters to prevent XSS
+     * @param input the string to escape
+     * @return the escaped string
+     */
+    private String escapeHtml(String input) {
+        if (input == null || input.isEmpty()) {
+            return "";
+        }
+        return input.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace("\"", "&quot;")
+                    .replace("'", "&#x27;")
+                    .replace("/", "&#x2F;");
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
