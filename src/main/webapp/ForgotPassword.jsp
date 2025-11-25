@@ -34,20 +34,38 @@ Password Recovery:
 </form><br/>
  
 <%
-if(request.getParameter("secret")!=null)
-             {
-                 Connection con=new DBConnect().connect(getServletContext().getRealPath("/WEB-INF/config.properties"));
-                  ResultSet rs=null;
-                  Statement stmt = con.createStatement();  
-                  rs=stmt.executeQuery("select * from users where username='"+request.getParameter("username").trim()+"' and secret='"+request.getParameter("secret")+"'");
-                  if(rs != null && rs.next()){
-                      out.print("Hello "+rs.getString("username")+", <b class='success'> Your Password is: "+rs.getString("password"));
-                  }
-                  else
-                  {
-                      out.print("<b class='fail'> Secret/Email is wrong</b>");
-                  }
-             }
+if (request.getParameter("secret") != null) {
+
+    String username = request.getParameter("username").trim();
+    String secret = request.getParameter("secret");
+
+    //Edited: Використовуємо try-with-resources для автоматичного закриття ресурсів
+    try (Connection con = new DBConnect().connect(getServletContext().getRealPath("/WEB-INF/config.properties"));
+         PreparedStatement stmt = con.prepareStatement(
+                 "SELECT * FROM users WHERE username = ? AND secret = ?"
+         )) {
+
+        //Edited: Запобігання SQL Injection
+        stmt.setString(1, username);
+        stmt.setString(2, secret);
+
+        // Edited: ResultSet теж закривається автоматично всередині try
+        try (ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                out.print("Hello " + rs.getString("username") +
+                        ", <b class='success'> Your Password is: " + rs.getString("password") + "</b>");
+            } else {
+                out.print("<b class='fail'> Secret/Email is wrong</b>");
+            }
+
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        out.print("<b class='fail'>An error occurred</b>");
+    }
+}
                   
 %>
                

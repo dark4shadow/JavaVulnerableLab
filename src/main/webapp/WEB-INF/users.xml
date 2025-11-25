@@ -10,26 +10,40 @@ and open the template in the editor.
     <user id="1">        
         <name>NEO</name>
         <username>neo</username>
-        <password>trinity</password>
+        <!-- old старий папроль
+        <password>trinity</password> 3 завдання третя вразливість
+        -->
+        <password>VAULT:users/neo</password>
         <email>neo@matrix</email>
          <about> I am the NEO</about>
     </user>
     <user id="2">        
         <name>Trinity</name>
         <username>trinity</username>
+        <!-- old старий папроль 3 завдання третя вразливість
         <password>neo</password>
+         -->
+        <password>VAULT:users/trinity</password>
         <email>trinity@matrix</email>
         <about>it is Trinity</about>
     </user>
     <user id="3">        
         <name>Oracle</name>
         <username>oracle</username>
+        <!-- old старий папроль 3 завдання третя вразливість
         <password>java</password>
+        -->
+        <password>VAULT:users/oracle</password>
+        <email>oracle@matrix</email>
+        <about></about>
     </user>
     <user id="4">        
         <name>Anderson</name>
         <username>anderson</username>
+        <!-- old старий папроль 3 завдання третя вразливість
         <password>java</password>
+        -->
+        <password>VAULT:users/anderson</password>
         <email>anderson@1999</email>
         <about>Computer Programmer</about>
     </user>

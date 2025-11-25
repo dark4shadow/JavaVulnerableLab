@@ -40,6 +40,10 @@ public class XPathQuery extends HttpServlet {
             
             //Parsing XML:
             DocumentBuilderFactory factory=DocumentBuilderFactory.newInstance();
+            // disable external entity expansion and disallow inline DOCTYPE to prevent XXE
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false); //CHANGED (Added)
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false); //CHANGED (Added)
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true); //CHNAGED (Added)
             factory.setNamespaceAware(true);
             DocumentBuilder builder=factory.newDocumentBuilder();
             Document xDoc=builder.parse(XML_SOURCE);
